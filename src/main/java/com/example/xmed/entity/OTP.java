@@ -9,15 +9,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @Data
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-public class OTPKeeper {
+public class OTP {
 
-    public OTPKeeper(String phoneNumber, String otpCode) {
+    public OTP(String phoneNumber, String otpCode) {
         this.phoneNumber = phoneNumber;
         this.otpCode = otpCode;
     }

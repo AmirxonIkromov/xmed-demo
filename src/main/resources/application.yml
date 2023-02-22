@@ -25,8 +25,3 @@ spring:
   sql:
     init:
       mode: always
-
-twilio:
-  account_sid: ACfd61ba3021f8f1d98f84a487eba6d6ef
-  auth_token: fb90eb482562ffcb797a1f322d51555f
-  trial_number: +998909089068

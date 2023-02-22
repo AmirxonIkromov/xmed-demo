@@ -1,9 +1,7 @@
 package com.example.xmed.service;
 
 import com.example.xmed.config.JwtService;
-import com.example.xmed.entity.OTPKeeper;
-import com.example.xmed.entity.User;
-import com.example.xmed.entity.UserAgent;
+import com.example.xmed.entity.OTP;
 import com.example.xmed.payload.AuthenticationResponse;
 import com.example.xmed.payload.SmsRequestDTO;
 import com.example.xmed.repository.OTPRepository;
@@ -13,16 +11,17 @@ import com.vonage.client.VonageClient;
 import com.vonage.client.sms.MessageStatus;
 import com.vonage.client.sms.SmsSubmissionResponse;
 import com.vonage.client.sms.messages.TextMessage;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -33,6 +32,7 @@ public class SmsService {
     private final UserRepository userRepository;
     private final OTPRepository otpRepository;
     private final JwtService jwtService;
+    private final AuthService authService;
     private final UserAgentRepository userAgentRepository;
 
 
@@ -46,7 +46,7 @@ public class SmsService {
             SmsSubmissionResponse response = vonageClient.getSmsClient().submitMessage(
                     new TextMessage(from, to, message));
 
-            otpRepository.save(new OTPKeeper(to, otpCode));
+            otpRepository.save(new OTP(to, otpCode));
 
             if (response.getMessages().get(0).getStatus() != MessageStatus.OK) {
                 throw new RuntimeException("Failed to send SMS");
@@ -65,6 +65,12 @@ public class SmsService {
             otpRepository.delete(otpKeeper);
 //            response.sendRedirect("http://localhost:8080/user-config/reset-password");
             var user = userRepository.findByPhoneNumber(smsRequestDTO.phoneNumber()).orElseThrow();
+            authService.userAgentParser(user, smsRequestDTO.userAgentDTO());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    user, null,
+                    AuthorityUtils.createAuthorityList("USER")
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
             var jwtToken = jwtService.generateToken(user);
             return ResponseEntity.status(HttpStatus.OK).body(AuthenticationResponse.builder().token(jwtToken).build());
         }

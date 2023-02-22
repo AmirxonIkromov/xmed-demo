@@ -1,12 +1,10 @@
-package com.example.xmed.twilio;
+package com.example.xmed.sms;
 
 import com.vonage.client.VonageClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Instant;
 
 
 @Configuration

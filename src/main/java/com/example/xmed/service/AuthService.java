@@ -3,14 +3,12 @@ package com.example.xmed.service;
 import com.example.xmed.config.JwtService;
 import com.example.xmed.entity.User;
 import com.example.xmed.entity.UserAgent;
-import com.example.xmed.payload.AuthenticationResponse;
-import com.example.xmed.payload.LoginDTO;
-import com.example.xmed.payload.PinCodeLoginDTO;
-import com.example.xmed.payload.RegisterDTO;
+import com.example.xmed.payload.*;
 import com.example.xmed.repository.UserAgentRepository;
 import com.example.xmed.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +17,8 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -32,82 +32,63 @@ public class AuthService {
     private final SmsService smsService;
 
 
-    public ResponseEntity<?> register(@NotNull RegisterDTO registerDTO) {
+    public ResponseEntity<?> register(@NotNull RegisterUserDTO registerUserDTO) {
         var user = User.builder()
-                .firstName(registerDTO.getFirstName())
-                .lastName(registerDTO.getLastName())
-                .phoneNumber(registerDTO.getPhoneNumber())
-                .password(passwordEncoder.encode(registerDTO.getPassword()))
+                .firstName(registerUserDTO.getRegisterDTO().getFirstName())
+                .lastName(registerUserDTO.getRegisterDTO().getLastName())
+                .phoneNumber(registerUserDTO.getRegisterDTO().getPhoneNumber())
+                .password(passwordEncoder.encode(registerUserDTO.getRegisterDTO().getPassword()))
                 .enabled(true)
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
                 .accountNonExpired(true)
-                .language(registerDTO.getLanguage())
-                .role(registerDTO.getRole())
+                .language(registerUserDTO.getRegisterDTO().getLanguage())
+                .role(registerUserDTO.getRegisterDTO().getRole())
                 .build();
         userRepository.save(user);
-
-        var userAgent = UserAgent.builder()
-                .userAgent(registerDTO.getUserAgent())
-                .ip(registerDTO.getIp())
-                .referer(registerDTO.getReferer())
-                .fullURL(registerDTO.getFullURL())
-                .clientOS(registerDTO.getClientOS())
-                .browser(registerDTO.getBrowser())
-                .appVersion(registerDTO.getAppVersion())
-                .hardwareInfo(registerDTO.getHardwareInfo())
-                .platform(registerDTO.getPlatform())
-                .city(registerDTO.getCity())
-                .country(registerDTO.getCountry())
-                .region(registerDTO.getRegion())
-                .location(registerDTO.getLocation())
-                .org(registerDTO.getOrg())
-                .timezone(registerDTO.getTimezone())
-                .readMe(registerDTO.getReadMe())
-                .user(user).build();
-        userAgentRepository.save(userAgent);
+        userAgentParser(user, registerUserDTO.getUserAgentDTO());
         smsService.sendSms(user.getPhoneNumber());
         return ResponseEntity.ok().build();
 
     }
 
-    public ResponseEntity<?> login(@NotNull LoginDTO loginDTO) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDTO.getPhoneNumber(), loginDTO.getPassword()
-                )
-        );
-        var user = userRepository.findByPhoneNumber(loginDTO.getPhoneNumber()).orElseThrow();
-        var userAgentRep = userAgentRepository.findByUser_IdAndDeletedStatusFalse(user.getId()).orElseThrow();
+    public ResponseEntity<?> login(@NotNull LoginUserDTO loginUserDTO) {
+        try {
+            var user = userRepository.findByPhoneNumber(loginUserDTO.getLoginDTO()
+                    .getPhoneNumber()).orElseThrow();
+            var userAgents = userAgentRepository.findAllByUser_Id(user.getId());
 
-        var userAgent = UserAgent.builder()
-                .userAgent(loginDTO.getUserAgent())
-                .ip(loginDTO.getIp())
-                .referer(loginDTO.getReferer())
-                .fullURL(loginDTO.getFullURL())
-                .clientOS(loginDTO.getClientOS())
-                .browser(loginDTO.getBrowser())
-                .appVersion(loginDTO.getAppVersion())
-                .hardwareInfo(loginDTO.getHardwareInfo())
-                .platform(loginDTO.getPlatform())
-                .city(loginDTO.getCity())
-                .country(loginDTO.getCountry())
-                .region(loginDTO.getRegion())
-                .location(loginDTO.getLocation())
-                .org(loginDTO.getOrg())
-                .timezone(loginDTO.getTimezone())
-                .readMe(loginDTO.getReadMe())
-                .user(user).build();
-        userAgentRep.setDeletedStatus(true);
-        userAgentRepository.save(userAgentRep);
-        userAgentRepository.save(userAgent);
+            for (UserAgent userAgent : userAgents) {
+                if (userAgent.getPlatform().equals("Web"))
+                    if (userAgent.getBrowser().equals(loginUserDTO.getUserAgentDTO().getBrowser())) {
+                        authenticationManager.authenticate(
+                                new UsernamePasswordAuthenticationToken(
+                                        loginUserDTO.getLoginDTO().getPhoneNumber(),
+                                        loginUserDTO.getLoginDTO().getPassword()
+                                )
+                        );
+                        var jwtToken = jwtService.generateToken(user);
+                        return ResponseEntity.ok(AuthenticationResponse.builder().token(jwtToken).build());
+                    }
+                if (userAgent.getPlatform().equals("IOS") || userAgent.getPlatform().equals("Android"))
+                    if (userAgent.getClientOS().equals(loginUserDTO.getUserAgentDTO().getClientOS())) {
+                        authenticationManager.authenticate(
+                                new UsernamePasswordAuthenticationToken(
+                                        loginUserDTO.getLoginDTO().getPhoneNumber(),
+                                        loginUserDTO.getLoginDTO().getPassword()
+                                )
+                        );
+                        var jwtToken = jwtService.generateToken(user);
+                        return ResponseEntity.ok(AuthenticationResponse.builder().token(jwtToken).build());
+                    }
+            }
+            smsService.sendSms(user.getPhoneNumber());
+            return ResponseEntity.ok().build();
 
-        if (userAgentRep.getPlatform().equals(loginDTO.getPlatform())) {
-            var jwtToken = jwtService.generateToken(user);
-            return ResponseEntity.ok(AuthenticationResponse.builder().token(jwtToken).build());
+        } catch (NoSuchElementException ex) {
+            ex.getStackTrace();
         }
-        smsService.sendSms(user.getPhoneNumber());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("no such user");
     }
 
     public AuthenticationResponse pinCodeLogin(PinCodeLoginDTO pinCodeLoginDTO) {
@@ -126,4 +107,25 @@ public class AuthService {
         return AuthenticationResponse.builder().token("pin code invalid").build();
     }
 
+    void userAgentParser(User user, UserAgentDTO userAgentDTO) {
+        var userAgent = UserAgent.builder()
+                .userAgent(userAgentDTO.getUserAgent())
+                .ip(userAgentDTO.getIp())
+                .referer(userAgentDTO.getReferer())
+                .fullURL(userAgentDTO.getFullURL())
+                .clientOS(userAgentDTO.getClientOS())
+                .browser(userAgentDTO.getBrowser())
+                .appVersion(userAgentDTO.getAppVersion())
+                .hardwareInfo(userAgentDTO.getHardwareInfo())
+                .platform(userAgentDTO.getPlatform())
+                .city(userAgentDTO.getCity())
+                .country(userAgentDTO.getCountry())
+                .region(userAgentDTO.getRegion())
+                .location(userAgentDTO.getLocation())
+                .org(userAgentDTO.getOrg())
+                .timezone(userAgentDTO.getTimezone())
+                .readMe(userAgentDTO.getReadMe())
+                .user(user).build();
+        userAgentRepository.save(userAgent);
+    }
 }
