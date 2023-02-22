@@ -1,0 +1,32 @@
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/xmed
+    username: postgres
+    password: root123
+    driver-class-name: org.postgresql.Driver
+#  main:
+#    web-application-type: none
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  sql:
+    init:
+      mode: always
+
+twilio:
+  account_sid: ACfd61ba3021f8f1d98f84a487eba6d6ef
+  auth_token: fb90eb482562ffcb797a1f322d51555f
+  trial_number: +998909089068
