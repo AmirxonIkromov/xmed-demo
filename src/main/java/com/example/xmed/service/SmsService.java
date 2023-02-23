@@ -2,6 +2,7 @@ package com.example.xmed.service;
 
 import com.example.xmed.config.JwtService;
 import com.example.xmed.entity.OTP;
+import com.example.xmed.entity.UserAgent;
 import com.example.xmed.payload.AuthenticationResponse;
 import com.example.xmed.payload.SmsRequestDTO;
 import com.example.xmed.repository.OTPRepository;
@@ -32,7 +33,6 @@ public class SmsService {
     private final UserRepository userRepository;
     private final OTPRepository otpRepository;
     private final JwtService jwtService;
-    private final AuthService authService;
     private final UserAgentRepository userAgentRepository;
 
 
@@ -65,7 +65,8 @@ public class SmsService {
             otpRepository.delete(otpKeeper);
 //            response.sendRedirect("http://localhost:8080/user-config/reset-password");
             var user = userRepository.findByPhoneNumber(smsRequestDTO.phoneNumber()).orElseThrow();
-            authService.userAgentParser(user, smsRequestDTO.userAgentDTO());
+            var userAgent = AuthService.userAgentParser(user, smsRequestDTO.userAgentDTO());
+            userAgentRepository.save(userAgent);
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     user, null,
                     AuthorityUtils.createAuthorityList("USER")

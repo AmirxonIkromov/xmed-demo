@@ -46,9 +46,20 @@ public class AuthService {
                 .role(registerUserDTO.getRegisterDTO().getRole())
                 .build();
         userRepository.save(user);
-        userAgentParser(user, registerUserDTO.getUserAgentDTO());
-        smsService.sendSms(user.getPhoneNumber());
-        return ResponseEntity.ok().build();
+        var userAgent = userAgentParser(user, registerUserDTO.getUserAgentDTO());
+        userAgentRepository.save(userAgent);
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        registerUserDTO.getRegisterDTO().getPhoneNumber(),
+                        registerUserDTO.getRegisterDTO().getPassword()
+                )
+        );
+        var jwtToken = jwtService.generateToken(user);
+        return ResponseEntity.ok(AuthenticationResponse.builder().token(jwtToken).build());
+
+//        smsService.sendSms(user.getPhoneNumber());
+//        return ResponseEntity.ok().build();
 
     }
 
@@ -107,8 +118,8 @@ public class AuthService {
         return AuthenticationResponse.builder().token("pin code invalid").build();
     }
 
-    void userAgentParser(User user, UserAgentDTO userAgentDTO) {
-        var userAgent = UserAgent.builder()
+    static UserAgent userAgentParser(User user, UserAgentDTO userAgentDTO) {
+        return UserAgent.builder()
                 .userAgent(userAgentDTO.getUserAgent())
                 .ip(userAgentDTO.getIp())
                 .referer(userAgentDTO.getReferer())
@@ -126,6 +137,5 @@ public class AuthService {
                 .timezone(userAgentDTO.getTimezone())
                 .readMe(userAgentDTO.getReadMe())
                 .user(user).build();
-        userAgentRepository.save(userAgent);
     }
 }

@@ -1,7 +1,7 @@
 package com.example.xmed.controller;
 
 
-import com.example.xmed.config.security.CurrentUser;
+import com.example.xmed.aop.CurrentUser;
 import com.example.xmed.entity.User;
 import com.example.xmed.payload.ChangePasswordDTO;
 import com.example.xmed.payload.ResetPasswordDTO;

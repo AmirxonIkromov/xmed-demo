@@ -1,4 +1,4 @@
-package com.example.xmed.config.security;
+package com.example.xmed.aop;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 

@@ -11,6 +11,8 @@ spring:
     driver-class-name: org.postgresql.Driver
 #  main:
 #    web-application-type: none
+  main:
+    allow-circular-references: true
   jpa:
     hibernate:
       ddl-auto: create-drop
