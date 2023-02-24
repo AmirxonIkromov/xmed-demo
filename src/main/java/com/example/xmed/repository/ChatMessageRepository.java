@@ -5,13 +5,12 @@ import com.example.xmed.enums.MessageStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
     Long countBySenderIdAndRecipientIdAndStatus(Long senderId, Long recipientId, MessageStatus status);
 
-    List<ChatMessage> findByChatId(Long chatId);
+    List<ChatMessage> findByChatIdAndDeletedNot(Long chatId, boolean deleted);
 
-    Optional<ChatMessage> findBySenderIdAndRecipientId(Long senderId, Long recipientId);
+    List<ChatMessage> findBySenderIdAndRecipientIdOrderByDateTimeDesc(Long senderId, Long recipientId);
 }

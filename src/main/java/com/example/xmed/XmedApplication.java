@@ -10,4 +10,14 @@ public class XmedApplication {
         SpringApplication.run(XmedApplication.class, args);
 
     }
+    /*
+    ---CHAT---
+
+    READ        ikkta pitichka bolishi
+    EDIT      done
+    DELETE    done
+    PIN
+    REPLY
+    */
+
 }

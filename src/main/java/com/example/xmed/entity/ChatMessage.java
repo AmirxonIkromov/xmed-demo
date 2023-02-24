@@ -1,13 +1,12 @@
 package com.example.xmed.entity;
 
-import com.example.xmed.enums.MessageStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -25,7 +24,8 @@ public class ChatMessage {
    private String senderName;
    private String recipientName;
    private String content;
-   private Date timestamp;
+   private boolean deleted;
+   private LocalDateTime dateTime;
 //   @Enumerated(EnumType.STRING)
    private String status;
 }

@@ -22,4 +22,5 @@ public class ChatRoom {
     private Long chatId;
     private Long senderId;
     private Long recipientId;
+    private String dateTime;
 }
