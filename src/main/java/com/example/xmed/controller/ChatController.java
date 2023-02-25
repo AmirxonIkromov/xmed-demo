@@ -3,7 +3,7 @@ package com.example.xmed.controller;
 import com.example.xmed.entity.ChatMessage;
 import com.example.xmed.entity.ChatNotification;
 import com.example.xmed.entity.ChatRoom;
-import com.example.xmed.payload.DeleteMessageDTO;
+import com.example.xmed.enums.MessageStatus;
 import com.example.xmed.payload.EditMessageDTO;
 import com.example.xmed.payload.ReplyDTO;
 import com.example.xmed.repository.ChatRoomRepository;
@@ -27,7 +27,7 @@ public class ChatController {
     private final ChatRoomService chatRoomService;
     private final ChatRoomRepository chatRoomRepository;
 
-    //    @MessageMapping("/chat")
+//    @MessageMapping("/chat")
 //    @SendTo("/room")
     @PostMapping("/chat")
     public void processMessage(@RequestBody ChatMessage chatMessage) {
@@ -70,12 +70,32 @@ public class ChatController {
         return ResponseEntity.ok(chatMessageService.editMessage(editMessageDTO));
     }
 
-    @DeleteMapping("/deleteMessage")
-    public ResponseEntity<?> deleteMessage(@RequestBody DeleteMessageDTO deleteMessageDTO) {
-        return ResponseEntity.ok(chatMessageService.deleteMessage(deleteMessageDTO));
-    }
     @PostMapping("/reply")
-    public ResponseEntity<?> reply(@RequestBody ReplyDTO replyDTO) {
-        return ResponseEntity.ok(chatMessageService.reply(replyDTO));
+    public void reply(@RequestBody ReplyDTO replyDTO) {
+        var chatMessage = chatMessageService.reply(replyDTO);
+        var saved = chatMessageService.save(chatMessage);
+        String recipientId = String.valueOf(chatMessage.getRecipientId());
+
+        simpMessagingTemplate.convertAndSendToUser(
+                recipientId, "/queue/messages",
+                new ChatNotification(
+                        saved.getId(),
+                        saved.getSenderId(),
+                        saved.getSenderName()));
+    }
+
+    @PostMapping("/read")
+    public void read(@RequestParam Long senderId, Long recipientId) {
+        chatMessageService.updateStatuses(senderId, recipientId, MessageStatus.READ.name());
+    }
+
+    @PostMapping("/pin")
+    public void pin(@RequestParam Long messageId){
+        chatMessageService.updateStatuses(messageId);
+    }
+
+    @GetMapping("/pinList/{chatId}")
+    public ResponseEntity<?> getPinList(@PathVariable Long chatId){
+        return ResponseEntity.ok(chatMessageService.getPinList(chatId));
     }
 }

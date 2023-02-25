@@ -13,19 +13,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomService chatRoomService;
-    private final ChatRoomRepository chatRoomRepository;
 
     public ChatMessage save(ChatMessage chatMessage) {
-//        chatMessage.setStatus(MessageStatus.RECEIVED);
-        chatMessage.setStatus(chatMessage.getStatus());
+        chatMessage.setStatus(MessageStatus.RECEIVED.name());
         chatMessageRepository.save(chatMessage);
         return chatMessage;
     }
@@ -38,11 +36,10 @@ public class ChatMessageService {
     public List<ChatMessage> findChatMessages(Long senderId, Long recipientId) {
         var chatId = chatRoomService.getChatId(senderId, recipientId, false).orElseThrow();
 
-        var messages = chatMessageRepository.findByChatIdAndDeletedNot(chatId,false);
+        var messages = chatMessageRepository.findALLByChatIdAndDeleted(chatId, false);
 
         if (messages.size() > 0) {
-//            updateStatuses(senderId, recipientId, MessageStatus.DELIVERED);
-            updateStatuses(senderId, recipientId, "DELIVERED");
+            updateStatuses(senderId, recipientId, MessageStatus.DELIVERED.name());
         }
 
         return messages;
@@ -52,8 +49,7 @@ public class ChatMessageService {
         return chatMessageRepository
                 .findById(id)
                 .map(chatMessage -> {
-//                    chatMessage.setStatus(MessageStatus.DELIVERED);
-                    chatMessage.setStatus(chatMessage.getStatus());
+                    chatMessage.setStatus(MessageStatus.DELIVERED.name());
                     return chatMessageRepository.save(chatMessage);
                 })
                 .orElseThrow(() ->
@@ -70,27 +66,52 @@ public class ChatMessageService {
         }
     }
 
+    public void updateStatuses(Long messageId) {
+        var chatMessage = chatMessageRepository.findById(messageId).orElseThrow();
+        chatMessage.setStatus(MessageStatus.PINED.name());
+        chatMessageRepository.save(chatMessage);
+    }
+
     public ResponseEntity<?> editMessage(EditMessageDTO editMessageDTO) {
-        var chatMessage = chatMessageRepository.findById(editMessageDTO.messageId()).orElseThrow();
-        if (chatMessage.getSenderId().equals(editMessageDTO.senderId())) {
-            chatMessage.setContent(editMessageDTO.newContent());
-            chatMessageRepository.save(chatMessage);
-            ResponseEntity.status(HttpStatus.ACCEPTED).build();
+
+        if (editMessageDTO.action().equals("EDIT")) {
+
+            var chatMessage = chatMessageRepository.findById(editMessageDTO.messageId()).orElseThrow();
+            if (chatMessage.getSenderId().equals(editMessageDTO.senderId())) {
+                chatMessage.setContent(editMessageDTO.newContent());
+                chatMessage.setStatus(MessageStatus.EDITED.name());
+                chatMessageRepository.save(chatMessage);
+                return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+            }
+        }
+        if (editMessageDTO.action().equals("DELETE")) {
+            var chatMessage = chatMessageRepository.findById(editMessageDTO.messageId()).orElseThrow();
+            if (chatMessage.getSenderId().equals(editMessageDTO.senderId())) {
+                chatMessage.setDeleted(true);
+                chatMessageRepository.save(chatMessage);
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
     }
 
-    public ResponseEntity<?> deleteMessage(DeleteMessageDTO deleteMessageDTO) {
-        var chatMessage = chatMessageRepository.findById(deleteMessageDTO.messageId()).orElseThrow();
-        if(chatMessage.getSenderId().equals(deleteMessageDTO.senderId())) {
-            chatMessage.setDeleted(true);
-            chatMessageRepository.save(chatMessage);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    public ChatMessage reply(ReplyDTO replyDTO) {
+        var repliedMessage = chatMessageRepository.findById(replyDTO.messageId()).orElseThrow();
+        var message = ChatMessage.builder()
+                .chatId(repliedMessage.getChatId())
+                .senderId(replyDTO.replierId())
+                .content(replyDTO.content())
+                .build();
+        message.setRecipientId(repliedMessage.getSenderId().equals(replyDTO.replierId())
+                ? repliedMessage.getRecipientId() : repliedMessage.getSenderId());
+        repliedMessage.setStatus(MessageStatus.REPLIED.name());
+        chatMessageRepository.save(repliedMessage);
+        chatMessageRepository.save(message);
+        return message;
     }
 
-    public ResponseEntity<?> reply(ReplyDTO replyDTO) {
-        return ResponseEntity.ok().build();
+    public List<ChatMessage> getPinList(Long chatId) {
+        return chatMessageRepository.findAllByChatIdAndStatus(chatId, MessageStatus.PINED.name());
     }
 }

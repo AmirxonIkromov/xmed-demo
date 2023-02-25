@@ -1,4 +1,6 @@
 package com.example.xmed.payload;
 
-public record ReplyDTO(Long replierId, String content, Long messageId) {
+import jakarta.validation.constraints.NotNull;
+
+public record ReplyDTO(@NotNull Long replierId, String content, @NotNull Long messageId) {
 }

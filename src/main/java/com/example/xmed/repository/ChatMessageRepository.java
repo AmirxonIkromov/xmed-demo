@@ -10,7 +10,9 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     Long countBySenderIdAndRecipientIdAndStatus(Long senderId, Long recipientId, MessageStatus status);
 
-    List<ChatMessage> findByChatIdAndDeletedNot(Long chatId, boolean deleted);
+    List<ChatMessage> findALLByChatIdAndDeleted(Long chatId, boolean deleted);
+
+    List<ChatMessage> findAllByChatIdAndStatus(Long chatId, String status);
 
     List<ChatMessage> findBySenderIdAndRecipientIdOrderByDateTimeDesc(Long senderId, Long recipientId);
 }

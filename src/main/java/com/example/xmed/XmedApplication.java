@@ -17,7 +17,7 @@ public class XmedApplication {
     EDIT      done
     DELETE    done
     PIN
-    REPLY
+    REPLY     done
     */
 
 }
