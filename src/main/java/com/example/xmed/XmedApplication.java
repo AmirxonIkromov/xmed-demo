@@ -13,10 +13,10 @@ public class XmedApplication {
     /*
     ---CHAT---
 
-    READ        ikkta pitichka bolishi
+    READ      done
     EDIT      done
     DELETE    done
-    PIN
+    PIN       done
     REPLY     done
     */
 

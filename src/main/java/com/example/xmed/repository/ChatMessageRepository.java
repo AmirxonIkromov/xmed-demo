@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-    Long countBySenderIdAndRecipientIdAndStatus(Long senderId, Long recipientId, MessageStatus status);
+    List<ChatMessage> findAllByRoomIdAndDeletedNotOrderByDateTimeDesc(Long roomId, boolean deleted);
 
-    List<ChatMessage> findALLByChatIdAndDeleted(Long chatId, boolean deleted);
+    List<ChatMessage> findAllBySenderIdAndRecipientIdAndDeletedNotOrderByDateTimeDesc(Long senderId, Long recipientId, boolean deleted);
 
-    List<ChatMessage> findAllByChatIdAndStatus(Long chatId, String status);
+    List<ChatMessage> findAllByRoomIdAndPinedOrderByDateTimeDesc(Long roomId, boolean pined);
 
-    List<ChatMessage> findBySenderIdAndRecipientIdOrderByDateTimeDesc(Long senderId, Long recipientId);
+    List<ChatMessage> findAllByRoomIdAndDateTimeBefore(Long roomId, String dateTime);
 }
