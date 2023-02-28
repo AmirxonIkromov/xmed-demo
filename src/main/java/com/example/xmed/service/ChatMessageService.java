@@ -1,51 +1,53 @@
 package com.example.xmed.service;
 
 import com.example.xmed.entity.ChatMessage;
+import com.example.xmed.entity.User;
 import com.example.xmed.enums.MessageStatus;
 import com.example.xmed.enums.MessageType;
+import com.example.xmed.mapper.ChatMessageDTOMapper;
+import com.example.xmed.mapper.UserDTOMapper;
 import com.example.xmed.payload.ChatMessageDTO;
-import com.example.xmed.payload.EditMessageDTO;
-import com.example.xmed.payload.ReplyDTO;
+import com.example.xmed.payload.UserDTO;
 import com.example.xmed.repository.ChatMessageRepository;
-import com.example.xmed.repository.ChatRoomRepository;
+import com.example.xmed.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomService chatRoomService;
+    private final UserRepository userRepository;
+    private final ChatMessageDTOMapper chatMessageDTOMapper;
 
     public ResponseEntity<?> message(ChatMessageDTO chatMessageDTO) {
         try {
             LocalDateTime localDateTime = LocalDateTime.now();
             DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
             String time = localDateTime.format(format);
+            var sender = userRepository.findById(chatMessageDTO.getSenderId()).orElseThrow();
+            var recipient = userRepository.findById(chatMessageDTO.getRecipientId()).orElseThrow();
 
             if (chatMessageDTO.getMessageType().equals(MessageType.SEND)) {
                 var roomId = chatRoomService.getRoomId(chatMessageDTO.getSenderId(), chatMessageDTO.getRecipientId());
 
-                var chatMessage = ChatMessage.builder()
-                        .senderId(chatMessageDTO.getSenderId())
-                        .senderName(chatMessageDTO.getSenderName())
-                        .recipientId(chatMessageDTO.getRecipientId())
-                        .recipientName(chatMessageDTO.getRecipientName())
+                var chatMessage = chatMessageRepository.save(ChatMessage.builder()
+                        .sender(sender)
+                        .recipient(recipient)
                         .content(chatMessageDTO.getContent())
                         .status(MessageStatus.DELIVERED)
                         .roomId(roomId)
                         .dateTime(time)
-                        .build();
-                return ResponseEntity.status(HttpStatus.CREATED).body(chatMessageRepository.save(chatMessage));
+                        .build());
+
+                return ResponseEntity.status(HttpStatus.CREATED).body(chatMessageDTOMapper.apply(chatMessage));
             }
 
             if (chatMessageDTO.getMessageType().equals(MessageType.READ)) {
@@ -62,8 +64,8 @@ public class ChatMessageService {
             if (chatMessageDTO.getMessageType().equals(MessageType.REPLY)) {
                 var repliedMessage = chatMessageRepository.findById(chatMessageDTO.getMessageId()).orElseThrow();
                 var newMessage = ChatMessage.builder()
-                        .senderId(chatMessageDTO.getSenderId())
-                        .recipientId(chatMessageDTO.getRecipientId())
+                        .sender(sender)
+                        .recipient(recipient)
                         .replyId(repliedMessage.getId())
                         .content(chatMessageDTO.getContent())
                         .roomId(repliedMessage.getRoomId())
@@ -82,7 +84,7 @@ public class ChatMessageService {
             if (chatMessageDTO.getMessageType().equals(MessageType.EDIT)) {
 
                 var chatMessage = chatMessageRepository.findById(chatMessageDTO.getMessageId()).orElseThrow();
-                if (chatMessage.getSenderId().equals(chatMessageDTO.getSenderId())) {
+                if (chatMessage.getSender().getId().equals(chatMessageDTO.getSenderId())) {
                     chatMessage.setContent(chatMessage.getContent());
                     chatMessage.setEdited(true);
                     chatMessageRepository.save(chatMessage);
@@ -93,7 +95,7 @@ public class ChatMessageService {
             if (chatMessageDTO.getMessageType().equals(MessageType.DELETE)) {
 
                 var chatMessage = chatMessageRepository.findById(chatMessageDTO.getMessageId()).orElseThrow();
-                if (chatMessage.getSenderId().equals(chatMessageDTO.getSenderId())) {
+                if (chatMessage.getSender().getId().equals(chatMessageDTO.getSenderId())) {
                     chatMessage.setDeleted(true);
                     chatMessage.setDeletedTime(time);
                     chatMessageRepository.save(chatMessage);
@@ -111,9 +113,12 @@ public class ChatMessageService {
                 findAllByRoomIdAndPinedOrderByDateTimeDesc(roomId, true));
     }
 
-    public ResponseEntity<?> messageList(Long senderId, Long recipientId) {
+    public ResponseEntity<?> messageList(Long roomId) {
         return ResponseEntity.ok(chatMessageRepository.
-                findAllBySenderIdAndRecipientIdAndDeletedNotOrderByDateTimeDesc(senderId, recipientId, true));
+                findAllByRoomIdAndDeletedNotOrderByDateTimeDesc(roomId, true)
+                .stream()
+                .map(chatMessageDTOMapper)
+                .collect(Collectors.toList()));
 
     }
 }

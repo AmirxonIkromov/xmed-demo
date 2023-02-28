@@ -10,8 +10,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     List<ChatMessage> findAllByRoomIdAndDeletedNotOrderByDateTimeDesc(Long roomId, boolean deleted);
 
-    List<ChatMessage> findAllBySenderIdAndRecipientIdAndDeletedNotOrderByDateTimeDesc(Long senderId, Long recipientId, boolean deleted);
-
     List<ChatMessage> findAllByRoomIdAndPinedOrderByDateTimeDesc(Long roomId, boolean pined);
 
     List<ChatMessage> findAllByRoomIdAndDateTimeBefore(Long roomId, String dateTime);

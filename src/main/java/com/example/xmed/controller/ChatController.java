@@ -1,13 +1,6 @@
 package com.example.xmed.controller;
 
-import com.example.xmed.entity.ChatMessage;
-import com.example.xmed.entity.ChatNotification;
-import com.example.xmed.entity.ChatRoom;
-import com.example.xmed.enums.MessageStatus;
 import com.example.xmed.payload.ChatMessageDTO;
-import com.example.xmed.payload.EditMessageDTO;
-import com.example.xmed.payload.ReplyDTO;
-import com.example.xmed.repository.ChatRoomRepository;
 import com.example.xmed.service.ChatMessageService;
 import com.example.xmed.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,10 +43,10 @@ public class ChatController {
     }
 
     @GetMapping("/message-list")
-    public ResponseEntity<?> messageList(@RequestBody ChatMessageDTO chatMessageDTO) {
-        if(chatMessageDTO == null)
+    public ResponseEntity<?> messageList(@RequestParam Long roomId) {
+        if(roomId == null)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        return chatMessageService.messageList(chatMessageDTO.getSenderId(), chatMessageDTO.getRecipientId());
+        return chatMessageService.messageList(roomId);
     }
 
     @GetMapping("/pin-list")

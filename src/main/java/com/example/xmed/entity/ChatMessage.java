@@ -1,14 +1,11 @@
 package com.example.xmed.entity;
 
 import com.example.xmed.enums.MessageStatus;
-import com.example.xmed.enums.MessageType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -21,11 +18,11 @@ public class ChatMessage {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
    private Long roomId;
-   private Long senderId;
-   private Long recipientId;
+   @ManyToOne
+   private User sender;
+   @ManyToOne
+   private User recipient;
    private Long replyId;
-   private String senderName;
-   private String recipientName;
    private String content;
    private String  dateTime;
    private String deletedTime;
@@ -34,4 +31,6 @@ public class ChatMessage {
    private boolean edited;
    @Enumerated(EnumType.STRING)
    private MessageStatus status;
+
+
 }

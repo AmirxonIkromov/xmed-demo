@@ -3,6 +3,7 @@ package com.example.xmed.repository;
 import com.example.xmed.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.Optional;
 

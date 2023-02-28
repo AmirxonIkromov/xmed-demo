@@ -22,8 +22,8 @@ public class UserAgentDTO {
     private String org;
     private String timezone;
     private String readMe;
-    private boolean isVerified = false;
     private String tokenDate;
-    private boolean deletedStatus = false;
     private String  deletedDate;
+    private boolean isVerified = false;
+    private boolean deletedStatus = false;
 }
