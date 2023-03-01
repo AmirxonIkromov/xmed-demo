@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 
 @Data
 @Builder
@@ -17,8 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class RegisterDTO {
 
-    private String firstName;
-    private String lastName;
+    private String fullName;
     @NotNull
     private String phoneNumber;
     @NotNull

@@ -2,6 +2,7 @@ package com.example.xmed.service;
 
 import com.example.xmed.entity.ChatRoom;
 import com.example.xmed.entity.User;
+import com.example.xmed.mapper.ChatRoomDTOMapper;
 import com.example.xmed.repository.ChatRoomRepository;
 import com.example.xmed.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    private final ChatRoomDTOMapper chatRoomDTOMapper;
 
     public Long getRoomId(Long senderId, Long recipientId) {
         var sender = userRepository.findById(senderId).orElseThrow();
@@ -41,6 +44,9 @@ public class ChatRoomService {
 
     public ResponseEntity<?> chatList(Long senderId) {
         return ResponseEntity.ok(chatRoomRepository
-                .findAllBySenderIdOrRecipientIdOrderByDateTimeDesc(senderId, senderId));
+                .findAllBySenderIdOrRecipientIdOrderByDateTimeDesc(senderId, senderId)
+                .stream()
+                .map(chatRoomDTOMapper)
+                .collect(Collectors.toList()));
     }
 }

@@ -34,8 +34,7 @@ public class AuthService {
 
     public ResponseEntity<?> register(@NotNull RegisterUserDTO registerUserDTO) {
         var user = User.builder()
-                .firstName(registerUserDTO.getRegisterDTO().getFirstName())
-                .lastName(registerUserDTO.getRegisterDTO().getLastName())
+                .fullName(registerUserDTO.getRegisterDTO().getFullName())
                 .phoneNumber(registerUserDTO.getRegisterDTO().getPhoneNumber())
                 .password(passwordEncoder.encode(registerUserDTO.getRegisterDTO().getPassword()))
                 .enabled(true)

@@ -1,13 +1,10 @@
 package com.example.xmed.service;
 
 import com.example.xmed.entity.ChatMessage;
-import com.example.xmed.entity.User;
 import com.example.xmed.enums.MessageStatus;
 import com.example.xmed.enums.MessageType;
 import com.example.xmed.mapper.ChatMessageDTOMapper;
-import com.example.xmed.mapper.UserDTOMapper;
 import com.example.xmed.payload.ChatMessageDTO;
-import com.example.xmed.payload.UserDTO;
 import com.example.xmed.repository.ChatMessageRepository;
 import com.example.xmed.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +29,11 @@ public class ChatMessageService {
             LocalDateTime localDateTime = LocalDateTime.now();
             DateTimeFormatter format = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
             String time = localDateTime.format(format);
-            var sender = userRepository.findById(chatMessageDTO.getSenderId()).orElseThrow();
-            var recipient = userRepository.findById(chatMessageDTO.getRecipientId()).orElseThrow();
 
             if (chatMessageDTO.getMessageType().equals(MessageType.SEND)) {
                 var roomId = chatRoomService.getRoomId(chatMessageDTO.getSenderId(), chatMessageDTO.getRecipientId());
+                var sender = userRepository.findById(chatMessageDTO.getSenderId()).orElseThrow();
+                var recipient = userRepository.findById(chatMessageDTO.getRecipientId()).orElseThrow();
 
                 var chatMessage = chatMessageRepository.save(ChatMessage.builder()
                         .sender(sender)
@@ -63,15 +60,19 @@ public class ChatMessageService {
 
             if (chatMessageDTO.getMessageType().equals(MessageType.REPLY)) {
                 var repliedMessage = chatMessageRepository.findById(chatMessageDTO.getMessageId()).orElseThrow();
-                var newMessage = ChatMessage.builder()
+                var sender = userRepository.findById(chatMessageDTO.getSenderId()).orElseThrow();
+                var recipient = userRepository.findById(chatMessageDTO.getRecipientId()).orElseThrow();
+
+                var newMessage = chatMessageRepository.save(ChatMessage.builder()
                         .sender(sender)
                         .recipient(recipient)
                         .replyId(repliedMessage.getId())
                         .content(chatMessageDTO.getContent())
                         .roomId(repliedMessage.getRoomId())
                         .dateTime(time)
-                        .build();
-                return ResponseEntity.status(HttpStatus.OK).body(chatMessageRepository.save(newMessage));
+                        .build());
+
+                return ResponseEntity.status(HttpStatus.OK).body(chatMessageDTOMapper.apply(newMessage));
             }
 
             if (chatMessageDTO.getMessageType().equals(MessageType.PIN)) {
@@ -102,15 +103,18 @@ public class ChatMessageService {
                     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
                 }
             }
-        }catch (Exception ex){
+        }catch (Exception ex) {
             ex.getStackTrace();
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-    public ResponseEntity<?> getPinList(Long roomId) {
+    public ResponseEntity<?> pinList(Long roomId) {
         return ResponseEntity.ok(chatMessageRepository.
-                findAllByRoomIdAndPinedOrderByDateTimeDesc(roomId, true));
+                findAllByRoomIdAndPinedOrderByDateTimeDesc(roomId, true)
+                .stream()
+                .map(chatMessageDTOMapper)
+                .collect(Collectors.toList()));
     }
 
     public ResponseEntity<?> messageList(Long roomId) {

@@ -10,14 +10,5 @@ public class XmedApplication {
         SpringApplication.run(XmedApplication.class, args);
 
     }
-    /*
-    ---CHAT---
-
-    READ      done
-    EDIT      done
-    DELETE    done
-    PIN       done
-    REPLY     done
-    */
 
 }
