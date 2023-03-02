@@ -25,17 +25,6 @@ public class User implements UserDetails {
     private String fullName;
     @Column(nullable = false)
     private String password;
-    private Float rate;
-    private String about;
-    private String education;
-    private Integer experience;
-    private Integer pricePerMin;
-    private String workplace;
-    private boolean online;
-    @OneToMany
-    private List<Category> category;
-    @Enumerated(EnumType.STRING)
-    private List<Language> receptionLanguage;
     @Column(nullable = false, unique = true)
     private String phoneNumber;
     private String pinCode;
