@@ -4,6 +4,12 @@ public record SearchDTO(
 
         String text,
         Long categoryId,
-        String sortBy
+        String sortBy,
+        Integer filterByPriceMin,
+        Integer filterByPriceMax,
+        Integer filterByExperience,
+        Float filterByRate,
+        boolean filterByOnline,
+        boolean filterByOffline
 ) {
 }
