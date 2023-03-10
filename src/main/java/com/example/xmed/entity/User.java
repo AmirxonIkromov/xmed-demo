@@ -23,17 +23,22 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String fullName;
+
     @Column(nullable = false)
     private String password;
+
     @Column(nullable = false, unique = true)
     private String phoneNumber;
+
     private String pinCode;
     private boolean enabled = true;
     private boolean accountNonExpired = true;
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;
+
     @Enumerated(EnumType.STRING)
     private Language language;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 

@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class XmedApplication {
     public static void main(String[] args) {
         SpringApplication.run(XmedApplication.class, args);
-
     }
 
 }

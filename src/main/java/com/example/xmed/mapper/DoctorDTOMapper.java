@@ -1,16 +1,24 @@
 package com.example.xmed.mapper;
 
+import com.example.xmed.entity.Category;
 import com.example.xmed.entity.Doctor;
+import com.example.xmed.entity.User;
 import com.example.xmed.payload.DoctorDTO;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.function.Function;
 
 @Service
-public class DoctorDTOMapper implements Function<Doctor, DoctorDTO> {
+public class DoctorDTOMapper implements Function<Object[], DoctorDTO> {
 
-    @Override
-    public DoctorDTO apply(Doctor doctor) {
+    public DoctorDTO apply(Object[] obj) {
+
+            Doctor doctor = (Doctor) obj[0];
+            User user = (User) obj[1];
+            Category category = (Category) obj[2];
+
         return new DoctorDTO(
                 doctor.getId(),
                 doctor.getRate(),
@@ -19,9 +27,13 @@ public class DoctorDTOMapper implements Function<Doctor, DoctorDTO> {
                 doctor.getExperience(),
                 doctor.getPricePerMin(),
                 doctor.getWorkplace(),
-                doctor.getCategory().getId(),
-                doctor.getUser().getId(),
-                doctor.getUser().getFullName()
+                doctor.isOnline(),
+                user.getId(),
+                user.getFullName(),
+                category.getId(),
+                category.getName(),
+                category.getSlag()
         );
     }
+
 }

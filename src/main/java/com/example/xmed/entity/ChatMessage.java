@@ -18,10 +18,6 @@ public class ChatMessage {
    @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
    private Long roomId;
-   @ManyToOne
-   private User sender;
-   @ManyToOne
-   private User recipient;
    private Long replyId;
    private String content;
    private String  dateTime;
@@ -29,6 +25,13 @@ public class ChatMessage {
    private boolean deleted;
    private boolean pined;
    private boolean edited;
+
+   @ManyToOne
+   private User sender;
+
+   @ManyToOne
+   private User recipient;
+
    @Enumerated(EnumType.STRING)
    private MessageStatus status;
 

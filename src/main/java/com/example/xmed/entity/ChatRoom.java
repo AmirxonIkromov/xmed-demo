@@ -16,9 +16,12 @@ public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @ManyToOne
     private User sender;
+
     @ManyToOne
     private User recipient;
+
     private String dateTime;
 }

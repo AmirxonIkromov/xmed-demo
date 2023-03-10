@@ -1,6 +1,10 @@
 package com.example.xmed.payload;
 
-public record DoctorDTO(
+import com.example.xmed.entity.Category;
+
+import java.util.List;
+
+public record DoctorDTO (
         Long id,
         Float rate,
         String about,
@@ -8,9 +12,12 @@ public record DoctorDTO(
         Integer experience,
         Integer pricePerMin,
         String workplace,
-        Long categoryId,
+        boolean online,
         Long userId,
-        String fullName
+        String fullName,
+        Long categoryId,
+        String categoryName,
+        String categorySlag
 
 ) {
 }
